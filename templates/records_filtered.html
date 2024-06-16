@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Filtered Records{% endblock %}
+
+{% block content %}
+    <h2>Filtered Records with Issuance History Changed in Last {{ days }} Days</h2>
+    {% if not records %}
+        <p style="text-align: center; color: #555;">No records found with changes in issuance history in the last {{days}} days.</p>
+    {% else %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Country</th>
+                    <th>Issuance History</th>
+                    <th>URL</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                    <tr>
+                        <td>{{ record.name }}</td>
+                        <td>{{ record.address }}</td>
+                        <td>{{ record.country }}</td>
+                        <td>
+                            <ul>
+                                {% for entry in record.issuance_history %}
+                                    <li>Year: {{ entry.year }}, Volume: {{ entry.volume }}</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                        <td><a href="{{ record.url }}" target="_blank">{{ record.url }}</a></td>
+                        <td>{{ record.today }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}
