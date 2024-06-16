@@ -8,7 +8,7 @@ from database import get_db, engine
 from models import DeviceRecord, Base
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
-from runner import fetch_records_with_issuance_history_changes, scrape, write_to_db
+from runner import fetch_records_with_issuance_history_changes, scrape, write_to_db, print_all_records
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import uuid
 import json
@@ -103,6 +103,14 @@ async def last_2_days(request: Request, db: Session = Depends(get_db), username:
     records = db.query(DeviceRecord).all()
     devices = [i.device for i in records]
     records = fetch_records_with_issuance_history_changes(devices, days=2)
+    return templates.TemplateResponse("records_filtered.html", {"request": request, "records": records, "days": 2})
+
+
+@app.get("/all_records")
+async def all_records(request: Request, db: Session = Depends(get_db), username: str = Depends(get_current_username)):
+    # records = db.query(DeviceRecord).all()
+    # devices = [i.device for i in records]
+    records = print_all_records()
     return templates.TemplateResponse("records_filtered.html", {"request": request, "records": records, "days": 2})
 
 
