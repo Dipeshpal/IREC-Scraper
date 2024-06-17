@@ -16,7 +16,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = FastAPI()
+app = FastAPI(title="Scraper",
+              redoc_url=None,
+              docs_url=None,
+              )
 
 # Templates setup
 templates = Jinja2Templates(directory="templates")
