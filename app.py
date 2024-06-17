@@ -1,4 +1,3 @@
-# main.py
 import os
 from typing import Optional
 from fastapi import FastAPI, Request, Form, Depends, HTTPException, Cookie
@@ -9,9 +8,12 @@ from models import DeviceRecord, Base
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from runner import fetch_records_with_issuance_history_changes, scrape, write_to_db, print_all_records
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.security import OAuth2PasswordBearer
 import uuid
 import json
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 
@@ -25,27 +27,16 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 Base.metadata.create_all(bind=engine)
 
 # Mock user database (for demonstration purposes)
-users = {
-    "user": {
-        "username": os.getenv('USER'),
-        "password": os.getenv('PASSWORD')
-    }
+registered_users = {
+    os.getenv('USER'): os.getenv('PASSWORD')
 }
 
 # Session management (for storing logged-in users)
 sessions = {}
 
 
-# Authentication function
-def authenticate_user(credentials: HTTPBasicCredentials = Depends(HTTPBasic())):
-    user = users.get(credentials.username)
-    if not user or user["password"] != credentials.password:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid credentials",
-            headers={"WWW-Authenticate": "Basic"},
-        )
-    return user["username"]
+# OAuth2 Password Bearer token for authentication
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 # Dependency to get current username based on session token
@@ -65,16 +56,15 @@ async def login(request: Request):
 
 
 @app.post("/login")
-async def do_login(request: Request, credentials: HTTPBasicCredentials = Depends(HTTPBasic())):
-    user = authenticate_user(credentials)
-    if user:
+async def do_login(request: Request, username: str = Form(...), password: str = Form(...)):
+    if username in registered_users and registered_users[username] == password:
         session_token = str(uuid.uuid4())
-        sessions[session_token] = user
+        sessions[session_token] = username
         response = RedirectResponse(url="/", status_code=303)
         response.set_cookie(key="session_token", value=session_token)
         return response
     else:
-        return templates.TemplateResponse("login.html", {"request": request, "message": "Invalid credentials"})
+        return RedirectResponse(url="/", status_code=303)
 
 
 # Logout
@@ -108,15 +98,13 @@ async def last_2_days(request: Request, db: Session = Depends(get_db), username:
 
 @app.get("/all_records")
 async def all_records(request: Request, db: Session = Depends(get_db), username: str = Depends(get_current_username)):
-    # records = db.query(DeviceRecord).all()
-    # devices = [i.device for i in records]
     records = print_all_records()
     return templates.TemplateResponse("records_filtered.html", {"request": request, "records": records, "days": 2})
 
 
 # Form submission page
 @app.get("/submit/")
-async def get_form(request: Request, username: str = Depends(get_current_username)):
+async def get_form(request: Request):
     return templates.TemplateResponse("submit_form.html", {"request": request})
 
 
@@ -152,7 +140,7 @@ async def submit_form(request: Request,
 
 # Success page after form submission
 @app.get("/submit/success")
-async def success_page(request: Request, username: str = Depends(get_current_username)):
+async def success_page(request: Request):
     return templates.TemplateResponse("success.html", {"request": request})
 
 
@@ -179,3 +167,9 @@ async def delete_record(record_id: int, db: Session = Depends(get_db), request: 
                                           {"request": request, "message": f"Record {record_id} deleted successfully"})
     else:
         return {"message": f"Record {record_id} deleted successfully"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)

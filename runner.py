@@ -127,7 +127,7 @@ def scrape(devices):
         if position != -1:
             context += response_text[position:]
         else:
-            count_failed += 1
+            # count_failed += 1
             continue
 
         position1 = response_text.find('Device')
@@ -164,9 +164,9 @@ def fetch_records_by_devices(devices):
     records = session.query(DataRecord).filter(DataRecord.devices.in_(devices)).all()
     if not records:
         print("No records found for the given devices.")
-    for record in records:
-        print(
-            f"Fetched Record - Name: {record.name}, Address: {record.address}, Country: {record.country}, Issuance History: {record.issuance_history}, URL: {record.url}, Date: {record.today}")
+    # for record in records:
+    #     print(
+    #         f"Fetched Record - Name: {record.name}, Address: {record.address}, Country: {record.country}, Issuance History: {record.issuance_history}, URL: {record.url}, Date: {record.today}")
     return records
 
 
@@ -178,12 +178,12 @@ def print_all_records():
         print("No records in the database.")
         return  # Exit the function if no records are found
 
-    for record in records:
-        print(
-            f"ID: {record.id}, Name: {record.name}, Address: {record.address}, "
-            f"Country: {record.country}, Issuance History: {record.issuance_history}, "
-            f"URL: {record.url}, Date: {record.today}"
-        )
+    # for record in records:
+        # print(
+        #     f"ID: {record.id}, Name: {record.name}, Address: {record.address}, "
+        #     f"Country: {record.country}, Issuance History: {record.issuance_history}, "
+        #     f"URL: {record.url}, Date: {record.today}"
+        # )
     return records
 
 
