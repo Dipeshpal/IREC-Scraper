@@ -1,14 +1,16 @@
 from runner import *
 from models import DeviceRecord
 
-engine = create_engine(DATABASE_URL)
-Session = sessionmaker(bind=engine)
-db = Session()
 
-records = db.query(DeviceRecord).all()
-devices = [i.device for i in records]
+def scrape_all():
+    engine = create_engine(DATABASE_URL)
+    Session = sessionmaker(bind=engine)
+    db = Session()
 
-results = scrape(devices)
-write_to_db(results)
-print("Inserted Data:")
-print(results)
+    records = db.query(DeviceRecord).all()
+    devices = [i.device for i in records]
+
+    results = scrape(devices)
+    write_to_db(results)
+    print("Inserted Data:")
+    print(results)

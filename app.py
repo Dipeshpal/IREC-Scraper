@@ -6,10 +6,11 @@ from sqlalchemy.orm import Session
 from database import get_db, engine
 from models import DeviceRecord, Base
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from runner import fetch_records_with_issuance_history_changes, scrape, write_to_db, print_all_records
 from fastapi.security import OAuth2PasswordBearer
 import uuid
+from daily_scraper import scrape_all
 import json
 from dotenv import load_dotenv
 
@@ -33,7 +34,6 @@ registered_users = {
 
 # Session management (for storing logged-in users)
 sessions = {}
-
 
 # OAuth2 Password Bearer token for authentication
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -167,6 +167,17 @@ async def delete_record(record_id: int, db: Session = Depends(get_db), request: 
                                           {"request": request, "message": f"Record {record_id} deleted successfully"})
     else:
         return {"message": f"Record {record_id} deleted successfully"}
+
+
+@app.get("/health_check")
+async def health_check(request: Request, db: Session = Depends(get_db)):
+    return JSONResponse({"status": "working"})
+
+
+@app.get("/scrape")
+async def scrape(request: Request, db: Session = Depends(get_db)):
+    res = scrape_all()
+    return JSONResponse({"data": res})
 
 
 if __name__ == "__main__":
