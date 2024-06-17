@@ -131,8 +131,8 @@ async def submit_form(request: Request,
     db.commit()
 
     # Perform additional operations like scraping and writing to db
-    results = scrape([device])
-    write_to_db(results)
+    # results = scrape([device])
+    # write_to_db(results)
 
     # Redirect to a confirmation page or the home page
     return RedirectResponse(url="/submit/success", status_code=303)
